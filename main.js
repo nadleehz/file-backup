@@ -13,7 +13,11 @@ function checkBackups(backups) {
     "properties": {
       "enabled": {
         "type": "boolean",
-        "description": "If true, skip it."
+        "description": "If false, skip it."
+      },
+      "skip_non_exist": {
+        "type": "boolean",
+        "description": "If true, skip non-exist file."
       },
       "src_dir": {
         "type": "string",
@@ -60,7 +64,7 @@ function doBackups(baseDir, backups) {
             console.log(`skip backup ${bkCfg.src_dir}`)
             continue
         }
-        let srcDir = bkCfg.src_dir
+        let srcDir = bkCfg.src_dir?`${bkCfg.src_dir}/`:''
         let dstDir = baseDir
         if (bkCfg.dst_dir) {
             dstDir = `${baseDir}/${bkCfg.dst_dir}`
@@ -73,8 +77,17 @@ function doBackups(baseDir, backups) {
         const files = bkCfg.files || []
         for (let file of files) {
             console.log(`backup file: ${file}`)
-            let quote = file.includes("*")? "": "\""
-            let ret = core.runCmd("zsh", ["-c", `cp -L ${quote}${srcDir}/${file}${quote} ${quote}${dstDir}/${quote}`])
+            let wildcard = file.includes("*")
+            let quote = wildcard? "": "\""
+            let skipNonExist = bkCfg.skip_non_exist || false
+            let cmd = ""
+            if (skipNonExist && !wildcard) {
+                cmd = `[[ -f ${quote}${srcDir}${file}${quote} ]] && cp -L ${quote}${srcDir}${file}${quote} ${quote}${dstDir}/${quote} || exit 0`
+            } else {
+                cmd = `cp -L ${quote}${srcDir}${file}${quote} ${quote}${dstDir}/${quote}`
+            }
+
+            let ret = core.runCmd("bash", ["-c", cmd])
             if (ret.status !== 0) {
                 throw new Error(`backup file ${file} failed: ${ret.stderr}`)
             }
@@ -82,8 +95,19 @@ function doBackups(baseDir, backups) {
         const dirs = bkCfg.dirs || []
         for (let dir of dirs) {
             console.log(`backup dir: ${dir}`)
-            let quote = dir.includes("*")? "": "\""
-            let ret = core.runCmd("bash", ['-c', `cp -rL ${quote}${srcDir}/${dir}${quote} ${quote}${dstDir}/${quote}`])
+            let wildcard = dir.includes("*")
+            let quote = wildcard? "": "\""
+            let skipNonExist = bkCfg.skip_non_exist || false
+
+            let cmd = ""
+            if (skipNonExist && !wildcard) {
+                cmd = `[[ -d ${quote}${srcDir}${dir}${quote} ]] && cp -rL ${quote}${srcDir}${dir}${quote} ${quote}${dstDir}/${quote} || exit 0`
+            } else {
+                cmd = `cp -rL ${quote}${srcDir}${dir}${quote} ${quote}${dstDir}/${quote}`
+            }
+
+
+            let ret = core.runCmd("bash", ['-c', cmd])
             if (ret.status !== 0) {
                 throw new Error(`backup dir ${dir} failed: ${ret.stderr}`)
             }

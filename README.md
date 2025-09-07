@@ -17,6 +17,7 @@ with:
           - dir2
       - enabled: true
         src_dir: /path/to/src2
+        skip_non_exist: true
         dst_dir: dstd  # relative to base_backup_dir, optional
         files:
           - file1
