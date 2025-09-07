@@ -1,0 +1,26 @@
+name: "test"
+
+working-dir: /Users/jun/Downloads
+env:
+  BACK_BASE_DIR: ~/backup
+
+jobs:
+  os-info:
+    steps:
+      - name: env
+        run: printenv
+      - name: file-backup-test
+        uses: file-backup@latest
+        plugin-path: ${WORKFLOW_DIR}
+        with:
+          base_backup_dir: /tmp
+          backup_cfg: |
+            backups:
+              - src_dir: /Users/jun/Downloads
+                dst_dir: dst1
+                files:
+                  - nadleeh.wf
+                  - "*.png"
+                dirs:
+                  - env
+
