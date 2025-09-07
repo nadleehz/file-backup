@@ -45,7 +45,7 @@ function checkBackups(backups) {
       }
     },
     "required": [
-      "src_dir"
+     
     ],
     "anyOf": [
       { "required": ["files"] },
