@@ -122,7 +122,7 @@ function main() {
     if (!backCfg) {
         throw new Error('backup-cfg is not set')
     }
-    let cfg = core.parseYaml(backCfg)
+    let cfg = core.parseYAML(backCfg)
     console.log("loaded backup config")
 
     checkBackups(cfg.backups)
